@@ -58,20 +58,79 @@
   overflow-wrap: anywhere;
 }
 
+/* ===== Profile and logout section ===== */
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid #374151;
+}
+
+.sidebar-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 3px;
+}
+
+.profile-name {
+  max-width: 100%;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-caption {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+/* ===== Logout button ===== */
 .logout-button {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
+  justify-content: center;
+  gap: 8px;
   flex-shrink: 0;
-  margin-top: auto;
-  padding: 13px 14px;
+  padding: 11px 10px;
   background: #7f1d1d;
   color: #ffffff;
   border: none;
   border-radius: 9px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .logout-button:hover {
@@ -120,19 +179,34 @@
     font-size: 13px;
   }
 
-  .nav-link span {
-    display: inline;
+  .sidebar-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+    justify-content: space-between;
+  }
+
+  .sidebar-profile {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 9px;
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .profile-details {
+    align-items: flex-start;
+  }
+
+  .profile-name {
+    text-align: left;
   }
 
   .logout-button {
-    width: 100%;
-    justify-content: center;
-    margin-top: 10px;
     padding: 10px 12px;
-  }
-
-  .logout-button span {
-    display: inline;
   }
 }
 
@@ -159,5 +233,22 @@
   .nav-link svg {
     width: 17px;
     height: 17px;
+  }
+
+  .sidebar-footer {
+    gap: 6px;
+  }
+
+  .profile-name {
+    max-width: 150px;
+    font-size: 12px;
+  }
+
+  .logout-button {
+    padding: 10px;
+  }
+
+  .logout-button span {
+    display: none;
   }
 }

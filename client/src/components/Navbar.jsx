@@ -8,11 +8,12 @@ import {
   Bot,
   LogOut,
   CalendarClock,
+  UserRound,
 } from "lucide-react";
 import "./Navbar.css";
 
 export default function Navbar() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const links = [
@@ -26,6 +27,18 @@ export default function Navbar() {
     },
     { name: "AI Assistant", path: "/ai", icon: Bot },
   ];
+
+  const displayName =
+    user?.name ||
+    user?.fullName ||
+    user?.full_name ||
+    user?.email?.split("@")[0] ||
+    "My Account";
+
+  const initial =
+    displayName !== "My Account"
+      ? displayName.charAt(0).toUpperCase()
+      : null;
 
   function handleLogout() {
     logout();
@@ -55,10 +68,36 @@ export default function Navbar() {
         })}
       </nav>
 
-      <button className="logout-button" onClick={handleLogout}>
-        <LogOut size={20} />
-        <span>Logout</span>
-      </button>
+      {/* Logged-in user's profile and logout */}
+      <div className="sidebar-footer">
+        <div className="sidebar-profile">
+          <div className="profile-avatar">
+            {initial ? (
+              <span>{initial}</span>
+            ) : (
+              <UserRound size={22} />
+            )}
+          </div>
+
+          <div className="profile-details">
+            <span className="profile-name" title={displayName}>
+              {displayName}
+            </span>
+            <span className="profile-caption">Signed in</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="logout-button"
+          onClick={handleLogout}
+          aria-label="Logout"
+          title="Logout"
+        >
+          <LogOut size={20} />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }

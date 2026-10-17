@@ -1,5 +1,10 @@
 
-import { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import api from "../services/api";
 
 const AuthContext = createContext();
@@ -10,6 +15,36 @@ export function AuthProvider({ children }) {
   );
 
   const [user, setUser] = useState(null);
+
+  // Load the logged-in user's information, including after refresh.
+  useEffect(() => {
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    let isActive = true;
+
+    async function fetchUser() {
+      try {
+        const response = await api.get("/api/auth/me");
+
+        if (isActive) {
+          setUser(response.data.user || response.data);
+        }
+      } catch (error) {
+        if (isActive) {
+          setUser(null);
+        }
+      }
+    }
+
+    fetchUser();
+
+    return () => {
+      isActive = false;
+    };
+  }, [token]);
 
   async function login(email, password) {
     const response = await api.post("/api/auth/login", {
@@ -25,7 +60,9 @@ export function AuthProvider({ children }) {
 
     localStorage.setItem("token", newToken);
     setToken(newToken);
+    setUser(response.data.user || null);
 
+    // Refresh the user details from the authenticated endpoint.
     try {
       const userResponse = await api.get("/api/auth/me");
       setUser(userResponse.data.user || userResponse.data);
