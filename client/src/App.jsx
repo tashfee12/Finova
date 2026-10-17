@@ -1,3 +1,4 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
@@ -19,7 +20,7 @@ function ProtectedRoute({ children }) {
   return (
     <>
       <Navbar />
-      <main style={{ marginLeft: "240px", padding: "25px" }}>
+      <main className="app-main">
         {children}
       </main>
     </>
@@ -50,22 +51,38 @@ export default function App() {
 
       <Route
         path="/dashboard"
-        element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/transactions"
-        element={<ProtectedRoute><Transactions /></ProtectedRoute>}
+        element={
+          <ProtectedRoute>
+            <Transactions />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/budgets"
-        element={<ProtectedRoute><Budgets /></ProtectedRoute>}
+        element={
+          <ProtectedRoute>
+            <Budgets />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/ai"
-        element={<ProtectedRoute><AIChat /></ProtectedRoute>}
+        element={
+          <ProtectedRoute>
+            <AIChat />
+          </ProtectedRoute>
+        }
       />
 
       <Route
@@ -74,17 +91,20 @@ export default function App() {
       />
 
       <Route
-        path="*"
-        element={<Navigate to={token ? "/dashboard" : "/login"} replace />}
+        path="/recurring-bills"
+        element={
+          <ProtectedRoute>
+            <RecurringBills />
+          </ProtectedRoute>
+        }
       />
+
       <Route
-  path="/recurring-bills"
-  element={
-    <ProtectedRoute>
-      <RecurringBills />
-    </ProtectedRoute>
-  }
-/>
+        path="*"
+        element={
+          <Navigate to={token ? "/dashboard" : "/login"} replace />
+        }
+      />
     </Routes>
   );
 }
