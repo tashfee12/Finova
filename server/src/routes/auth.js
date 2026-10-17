@@ -9,7 +9,7 @@ const router = express.Router();
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password } = req.body || {};
 
     if (
       typeof name !== "string" ||
@@ -21,12 +21,14 @@ router.post("/register", async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, and a password of at least 8 characters are required.",
+        message:
+          "Name, email, and a password of at least 8 characters are required.",
       });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
 
+    // Check whether the email is already registered
     const existingUser = await pool.query(
       "SELECT id FROM users WHERE email = $1",
       [normalizedEmail]
@@ -39,6 +41,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    // Hash the password before saving it
     const passwordHash = await bcrypt.hash(password, 12);
 
     const result = await pool.query(
@@ -53,22 +56,25 @@ router.post("/register", async (req, res) => {
       message: "User registered successfully.",
       user: result.rows[0],
     });
-  
   } catch (error) {
     console.error("Registration error:", error);
+
+    // Handle duplicate email constraint, if triggered by a race condition
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists.",
+      });
+    }
 
     return res.status(500).json({
       success: false,
       message: "Unable to register user.",
-      // Temporary debugging information
-      debug: error.message,
-      code: error.code,
     });
   }
-
 });
 
-/* POST /api/auth/login */
+// POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -102,7 +108,7 @@ router.post("/login", async (req, res) => {
 
     const user = result.rows[0];
 
-    // Compare submitted password with the stored bcrypt hash
+    // Verify the submitted password
     const passwordMatches = await bcrypt.compare(
       password,
       user.password_hash
@@ -117,6 +123,7 @@ router.post("/login", async (req, res) => {
 
     if (!process.env.JWT_SECRET) {
       console.error("JWT_SECRET is missing from the environment.");
+
       return res.status(500).json({
         success: false,
         message: "Server authentication is not configured.",
@@ -129,7 +136,9 @@ router.post("/login", async (req, res) => {
         userId: user.id,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      {
+        expiresIn: "1d",
+      }
     );
 
     return res.status(200).json({
@@ -143,7 +152,7 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error.message);
+    console.error("Login error:", error);
 
     return res.status(500).json({
       success: false,
@@ -152,5 +161,77 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// GET /api/auth/me
+// Returns the currently authenticated user's profile
+router.get("/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token is required.",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing from the environment.");
+
+      return res.status(500).json({
+        success: false,
+        message: "Server authentication is not configured.",
+      });
+    }
+
+    // Verify the token and extract the user ID
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Fetch the user's current profile from PostgreSQL
+    const result = await pool.query(
+      `SELECT id, name, email
+       FROM users
+       WHERE id = $1`,
+      [decoded.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user: result.rows[0],
+    });
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Your session has expired. Please log in again.",
+      });
+    }
+
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "NotBeforeError"
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authentication token.",
+      });
+    }
+
+    console.error("Get profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to retrieve user profile.",
+    });
+  }
+});
 
 module.exports = router;
